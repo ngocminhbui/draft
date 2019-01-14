@@ -8,7 +8,7 @@ import model.metric as module_metric
 import model.model as module_arch
 from trainer import Trainer
 from utils import Logger
-
+import pdb
 
 def get_instance(module, name, config, *args):
     return getattr(module, config[name]['type'])(*args, **config[name]['args'])
@@ -17,9 +17,16 @@ def main(config, resume):
     train_logger = Logger()
 
     # setup data_loader instances
-    data_loader = get_instance(module_data, 'data_loader', config)
-    valid_data_loader = data_loader.split_validation()
+    if config['use_test_set_as_validation']:
+        print('use test set as validation set..')
+        config['data_loader']['args']['validation_split'] = 0
+        valid_data_loader = get_instance(module_data, 'data_loader_test', config)
+    else:
+        print('split trainset set to validation set..')
+        valid_data_loader = data_loader.split_validation()
 
+    data_loader = get_instance(module_data, 'data_loader', config)
+    pdb.set_trace()
     # build model architecture
     model = get_instance(module_arch, 'arch', config)
     print(model)

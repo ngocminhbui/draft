@@ -10,13 +10,25 @@
             "view_after_embedding_size":128
         }
     },
+    "use_test_set_as_validation": true,
     "data_loader": {
         "type": "ShrecDataloader",
         "args":{
             "data_dir": "../data/shrec17/resnet50",
             "batch_size": 64,
             "shuffle": true,
-            "validation_split": 0.2,
+            "validation_split": 0,
+            "num_workers": 16
+        }
+    },
+    "data_loader_test": {
+        "type": "ShrecDataloader",
+        "args":{
+            "data_dir": "../data/shrec17/resnet50",
+            "batch_size": 64,
+            "shuffle": true,
+            "validation_split": 0,
+            "training": false,
             "num_workers": 16
         }
     },
