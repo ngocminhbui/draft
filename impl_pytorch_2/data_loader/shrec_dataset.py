@@ -23,6 +23,9 @@ class ShrecMultiviewDataset(Dataset):
             self.X = np.load(os.path.join(self.data_dir, 'x_test_sample.npy'))
             self.Y = np.load(os.path.join(self.data_dir, 'y_test_sample.npy'))
             
+        #convert float64 to float32
+        self.X = np.float32(self.X)
+        self.Y = np.float32(self.Y)
         self.transform = transform
 
     def __len__(self):
