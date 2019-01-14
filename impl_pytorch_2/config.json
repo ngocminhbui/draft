@@ -1,5 +1,5 @@
 {
-    "name": "Mnist_LeNet",
+    "name": "shrec_baseline_model",
     "n_gpu": 1,
     
     "arch": {
@@ -14,9 +14,9 @@
         "type": "ShrecDataloader",
         "args":{
             "data_dir": "../data/shrec17/resnet50",
-            "batch_size": 16,
+            "batch_size": 64,
             "shuffle": true,
-            "validation_split": 0.1,
+            "validation_split": 0.2,
             "num_workers": 16
         }
     },
@@ -30,7 +30,7 @@
     },
     "loss": "cross_entropy_loss",
     "metrics": [
-        "my_metric", "my_metric2"
+        "metric_accuracy", "metric_accuracy_top_k"
     ],
     "lr_scheduler": {
         "type": "StepLR",
@@ -40,13 +40,13 @@
         }
     },
     "trainer": {
-        "epochs": 100,
+        "epochs": 1000,
         "save_dir": "saved/",
         "save_period": 1,
         "verbosity": 2,
         
         "monitor": "min val_loss",
-        "early_stop": 10,
+        "early_stop": 100,
         
         "tensorboardX": true,
         "log_dir": "saved/runs"
