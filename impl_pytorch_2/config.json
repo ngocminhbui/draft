@@ -5,7 +5,9 @@
     "arch": {
         "type": "ShrecBaseline",
         "args": {
-            "num_classes":20
+            "num_classes":20,
+            "view_embedding_size":2048,
+            "view_after_embedding_size":128
         }
     },
     "data_loader": {
@@ -26,7 +28,7 @@
             "amsgrad": true
         }
     },
-    "loss": "nll_loss",
+    "loss": "cross_entropy_loss",
     "metrics": [
         "my_metric", "my_metric2"
     ],
