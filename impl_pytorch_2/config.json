@@ -7,13 +7,13 @@
         "args": {}
     },
     "data_loader": {
-        "type": "MnistDataLoader",
+        "type": "ShrecDataloader",
         "args":{
-            "data_dir": "data/",
-            "batch_size": 128,
+            "data_dir": "../data/shrec17/resnet50",
+            "batch_size": 16,
             "shuffle": true,
             "validation_split": 0.1,
-            "num_workers": 2
+            "num_workers": 16
         }
     },
     "optimizer": {
