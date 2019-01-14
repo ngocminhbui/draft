@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from base import BaseModel
 import torch
+import pdb
 class RingSettings():
     LIST_RING = [
         [0, 1, 2, 8, 9, 10, 16, 17, 18],
@@ -41,33 +42,44 @@ class RingSettings():
         """
 
 class ShrecBaseline(BaseModel):
-    def __init__(self, num_classes=20):
+    def __init__(self, num_classes=20, n_view_in_ring=9, view_embedding_size=2048, view_after_embedding_size=128):
         super(ShrecBaseline, self).__init__()
-        self.fc1 = nn.Linear(3,3)
-
-    
+        self.n_view_in_ring = n_view_in_ring
+        self.n_classes = num_classes
+        self.view_embedding_size = view_embedding_size
+        self.view_after_embedding_size = view_after_embedding_size
         
+        self.fc1 = nn.Linear(self.view_embedding_size,self.view_after_embedding_size)
+        self.fc_concat = nn.Linear(self.n_view_in_ring * self.view_after_embedding_size, self.n_classes)
 
     def forward(self, x):
         '''
-        x: input tensor with size [batch_size, number of views, embedding size]
+            x: input tensor with size [batch_size, number of views, embedding size]
         '''
-        x = RingSettings.convert(x) #[batch_siz, n_view , n_ring_in_view, embedding size]
-        
-class MnistModel(BaseModel):
-    def __init__(self, num_classes=10):
-        super(MnistModel, self).__init__()
-        self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
-        self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
-        self.conv2_drop = nn.Dropout2d()
-        self.fc1 = nn.Linear(320, 50)
-        self.fc2 = nn.Linear(50, num_classes)
+        x = RingSettings.convert(x) #[batch_size, n_ring , n_ring_in_view, embedding size]
+        gather = []
+        for i in range(x.shape[1]):
+            in_ = x[:,i,:,:] # [batch_size, n_ring_in_view, embedding size]
+            out_ = self._forward_one_ring(in_) # [batch_size, n_class] <- class scores for ring
+            out_ = out_.unsqueeze(1) # [batch_size, 1, n_class]
+            gather.append(out_) #[batch_size, n_ring, n_class]
+        x = torch.cat(gather, 1) # [batch_size, n_ring, n_classes]
 
-    def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
-        x = x.view(-1, 320)
-        x = F.relu(self.fc1(x))
-        x = F.dropout(x, training=self.training)
-        x = self.fc2(x)
-        return F.log_softmax(x, dim=1)
+        #voting
+        x = torch.mean(x,1) # [batch_size, n_classes]
+        return x
+
+    def _forward_one_ring(self,x):
+        """
+            x: input tensor with size [batch_size, n_view_in_ring, embedding size]
+        """
+        gather = []
+        for i in range(x.shape[1]):
+            in_ = x[:,i,:] # [batch_size, embedding size]
+            out_ = self.fc1(in_) # [batch_size, view_after_embedding_size]
+            out_ = out_.unsqueeze(1) # [batch_size, 1, view_after_embedding_size]
+            gather.append(out_) #[batch_size, n_view_in_ring, view_after_embedding_size]
+        x = torch.cat(gather, 1) # [batch_size, n_view_in_ring, view_after_embedding_size]
+        x = x.reshape(-1, self.n_view_in_ring * self.view_after_embedding_size) # [batch_size, n_view_in_ring * view_after_embedding_size]
+        x = self.fc_concat(x)# [batch_size, n_classes]
+        return x
