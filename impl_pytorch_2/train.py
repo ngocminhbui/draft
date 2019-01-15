@@ -8,7 +8,7 @@ import model.metric as module_metric
 import model.model as module_arch
 from trainer import Trainer
 from utils import Logger
-import pdb
+import ipdb
 
 def get_instance(module, name, config, *args):
     return getattr(module, config[name]['type'])(*args, **config[name]['args'])
@@ -26,7 +26,6 @@ def main(config, resume):
         valid_data_loader = data_loader.split_validation()
 
     data_loader = get_instance(module_data, 'data_loader', config)
-    pdb.set_trace()
     # build model architecture
     model = get_instance(module_arch, 'arch', config)
     print(model)
