@@ -16,7 +16,8 @@ class BaseDataLoader(DataLoader):
         self.n_samples = len(dataset)
 
         self.sampler, self.valid_sampler = self._split_sampler(self.validation_split)
-
+        if batch_size == -1:
+            batch_size = len(dataset)
         self.init_kwargs = {
             'dataset': dataset,
             'batch_size': batch_size,

@@ -25,7 +25,7 @@
         "type": "ShrecDataloader",
         "args":{
             "data_dir": "../data/shrec17/resnet50",
-            "batch_size": 64,
+            "batch_size": -1,
             "shuffle": false,
             "validation_split": 0,
             "training": false,
@@ -36,7 +36,7 @@
         "type": "Adam",
         "args":{
             "lr": 0.0001,
-            "weight_decay": 0.1,
+            "weight_decay": 0.0001,
             "amsgrad": true
         }
     },
@@ -57,7 +57,7 @@
         "save_period": 1,
         "verbosity": 2,
         
-        "monitor": "min val_loss",
+        "monitor": "max metric_accuracy",
         "early_stop": 100,
         
         "tensorboardX": true,
