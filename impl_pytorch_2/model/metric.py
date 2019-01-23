@@ -3,6 +3,7 @@ import torch
 
 def metric_accuracy(output, target):
     with torch.no_grad():
+        output = output[0]
         pred = torch.argmax(output, dim=1)
         assert pred.shape[0] == len(target)
         correct = 0
@@ -11,6 +12,7 @@ def metric_accuracy(output, target):
 
 def metric_accuracy_top_k(output, target, k=3):
     with torch.no_grad():
+        output = output[0]
         pred = torch.topk(output, k, dim=1)[1]
         assert pred.shape[0] == len(target)
         correct = 0

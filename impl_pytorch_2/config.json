@@ -14,7 +14,7 @@
     "data_loader": {
         "type": "ShrecDataloader",
         "args":{
-            "data_dir": "../data/shrec17/resnet50",
+            "data_dir": "/home/bnminh/data/shrec17/resnet50",
             "batch_size": 128,
             "shuffle": true,
             "validation_split": 0,
@@ -24,7 +24,7 @@
     "data_loader_test": {
         "type": "ShrecDataloader",
         "args":{
-            "data_dir": "../data/shrec17/resnet50",
+            "data_dir": "/home/bnminh/data/shrec17/resnet50",
             "batch_size": -1,
             "shuffle": false,
             "validation_split": 0,
@@ -40,7 +40,7 @@
             "amsgrad": true
         }
     },
-    "loss": "cross_entropy_loss",
+    "loss": "cross_entropy_loss_multi",
     "metrics": [
         "metric_accuracy", "metric_accuracy_top_k"
     ],
