@@ -66,8 +66,8 @@ class ShrecBaseline(BaseModel):
         x = torch.cat(gather, 1) # [batch_size, n_ring, n_classes]
 
         #voting
-        x = torch.mean(x,1) # [batch_size, n_classes]
-        return x
+        x_voted = torch.mean(x,1) # [batch_size, n_classes]
+        return x_voted, x #return both voted and vote
 
     def _forward_one_ring(self,x):
         """
