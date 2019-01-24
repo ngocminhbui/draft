@@ -59,6 +59,7 @@ class Trainer(BaseTrainer):
 
             self.writer.set_step((epoch - 1) * len(self.data_loader) + batch_idx)
             self.writer.add_scalar('loss', loss.item())
+
             total_loss += loss.item()
             total_metrics += self._eval_metrics(output, target)
 
