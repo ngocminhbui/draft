@@ -24,8 +24,15 @@ class Trainer(BaseTrainer):
     def _eval_metrics(self, output, target):
         acc_metrics = np.zeros(len(self.metrics))
         for i, metric in enumerate(self.metrics):
-            acc_metrics[i] += metric(output, target)
-            self.writer.add_scalar(f'{metric.__name__}', acc_metrics[i])
+            metric_result =  metric(output, target)
+            if isinstance(metric_result, list):
+                # list metric, visualize in tfboard
+                for (idx,ite) in enumerate(metric_result):
+                    self.writer.add_scalars(f'{metric.__name__}', {f'{idx}': ite})
+
+            else:
+                acc_metrics[i] += metric_result 
+                self.writer.add_scalar(f'{metric.__name__}', acc_metrics[i])
         return acc_metrics
 
     def _train_epoch(self, epoch):

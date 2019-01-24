@@ -1,6 +1,6 @@
 {
     "name": "shrec_baseline_model",
-    "n_gpu": 1,
+    "n_gpu": 3,
     
     "arch": {
         "type": "ShrecBaseline",
@@ -35,20 +35,19 @@
     "optimizer": {
         "type": "Adam",
         "args":{
-            "lr": 0.0001,
-            "weight_decay": 0.0001,
-            "amsgrad": true
+            "lr": 0.00001,
+            "weight_decay": 0,
+            "amsgrad": false
         }
     },
     "loss": "cross_entropy_loss_multi",
     "metrics": [
-        "metric_accuracy", "metric_accuracy_top_k"
+        "metric_accuracy", "metric_accuracy_top_k","metric_accuracy_per_ring"
     ],
     "lr_scheduler": {
-        "type": "StepLR",
+        "type": "ReduceLROnPlateau",
         "args": {
-            "step_size": 50,
-            "gamma": 0.1
+            "mode": "min"
         }
     },
     "trainer": {

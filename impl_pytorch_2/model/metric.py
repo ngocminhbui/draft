@@ -19,3 +19,15 @@ def metric_accuracy_top_k(output, target, k=3):
         for i in range(k):
             correct += torch.sum(pred[:, i] == target).item()
     return correct / len(target)
+
+def metric_accuracy_per_ring(output, target):
+    with torch.no_grad():
+        x = output[1] # batchsize x n_ring x n_classes
+        x = torch.transpose(x, 1,0)
+        accuracy_all = []
+        for i in range(x.shape[0]):
+            x_ring = x[i] # batchsize x n_classes
+            accuracy_ring = metric_accuracy((x_ring,0),target)
+            accuracy_all.append(accuracy_ring)
+
+    return accuracy_all
