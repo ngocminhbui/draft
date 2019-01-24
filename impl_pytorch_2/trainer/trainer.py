@@ -80,8 +80,8 @@ class Trainer(BaseTrainer):
             val_log = self._valid_epoch(epoch)
             log = {**log, **val_log}
 
-        if self.lr_scheduler is not None:
-            self.lr_scheduler.step()
+        if self.lr_scheduler is not None and self.do_validation:
+            self.lr_scheduler.step(val_log['val_loss'])
 
         return log
 

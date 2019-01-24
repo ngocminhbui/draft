@@ -40,6 +40,35 @@ class RingSettings():
         q = torch.equal(x_original[2,22,:], x[2,5,7,:])
         print('equal?:', q)
         """
+class AttentionModel(BaseModel):
+    def __init__(self, num_classes=20, n_view_in_ring=9, view_embedding_size=2048, view_after_embedding_size=128):
+        super(ShrecBaseline, self).__init__()
+        self.n_view_in_ring = n_view_in_ring
+        self.n_classes = num_classes
+        self.view_embedding_size = view_embedding_size
+        self.view_after_embedding_size = view_after_embedding_size
+        
+        self.fc1 = nn.Linear(self.view_embedding_size,self.view_after_embedding_size)
+        self.fc_concat = nn.Linear(self.n_view_in_ring * self.view_after_embedding_size, self.n_classes)
+
+    def forward(self,x):
+        return self._forward_one_ring(x)
+    
+    def _forward_one_ring(self,x):
+        """
+            x: input tensor with size [batch_size, n_view_in_ring, embedding size]
+        """
+        gather = []
+        for i in range(x.shape[1]):
+            in_ = x[:,i,:] # [batch_size, embedding size]
+            out_ = self.fc1(in_) # [batch_size, view_after_embedding_size]
+            out_ = out_.unsqueeze(1) # [batch_size, 1, view_after_embedding_size]
+            gather.append(out_) #[batch_size, n_view_in_ring, view_after_embedding_size]
+        x = torch.cat(gather, 1) # [batch_size, n_view_in_ring, view_after_embedding_size]
+        x = x.reshape(-1, self.n_view_in_ring * self.view_after_embedding_size) # [batch_size, n_view_in_ring * view_after_embedding_size]
+        x = self.fc_concat(x)# [batch_size, n_classes]
+        return x
+
 
 class ShrecBaseline(BaseModel):
     def __init__(self, num_classes=20, n_view_in_ring=9, view_embedding_size=2048, view_after_embedding_size=128):
@@ -51,6 +80,11 @@ class ShrecBaseline(BaseModel):
         
         self.fc1 = nn.Linear(self.view_embedding_size,self.view_after_embedding_size)
         self.fc_concat = nn.Linear(self.n_view_in_ring * self.view_after_embedding_size, self.n_classes)
+        self.relu = nn.ReLU(inplace = True)
+        torch.nn.init.xavier_uniform_(self.fc1.weight)
+        torch.nn.init.xavier_uniform_(self.fc_concat.weight)
+        torch.nn.init.zeros_(self.fc1.bias)
+        torch.nn.init.zeros_(self.fc_concat.bias)
 
     def forward(self, x):
         '''
@@ -77,6 +111,7 @@ class ShrecBaseline(BaseModel):
         for i in range(x.shape[1]):
             in_ = x[:,i,:] # [batch_size, embedding size]
             out_ = self.fc1(in_) # [batch_size, view_after_embedding_size]
+            out_ = self.relu(out_) #relu activation
             out_ = out_.unsqueeze(1) # [batch_size, 1, view_after_embedding_size]
             gather.append(out_) #[batch_size, n_view_in_ring, view_after_embedding_size]
         x = torch.cat(gather, 1) # [batch_size, n_view_in_ring, view_after_embedding_size]
