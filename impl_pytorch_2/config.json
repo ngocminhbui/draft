@@ -42,7 +42,7 @@
     },
     "loss": "cross_entropy_loss_multi",
     "metrics": [
-        "metric_accuracy", "metric_accuracy_top_k","metric_accuracy_per_ring"
+        "metric_accuracy", "metric_accuracy_top_k"
     ],
     "lr_scheduler": {
         "type": "ReduceLROnPlateau",

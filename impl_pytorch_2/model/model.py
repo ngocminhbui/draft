@@ -52,6 +52,7 @@ class AttentionModel(BaseModel):
         self.fc_concat = nn.Linear(self.n_view_in_ring * self.view_after_embedding_size, self.n_classes)
 
     def forward(self,x):
+        
         return self._forward_one_ring(x)
     
     def _forward_one_ring(self,x):
@@ -62,6 +63,7 @@ class AttentionModel(BaseModel):
         for i in range(x.shape[1]):
             in_ = x[:,i,:] # [batch_size, embedding size]
             out_ = self.fc1(in_) # [batch_size, view_after_embedding_size]
+            out_ = self.relu(out_) #relu activation
             out_ = out_.unsqueeze(1) # [batch_size, 1, view_after_embedding_size]
             gather.append(out_) #[batch_size, n_view_in_ring, view_after_embedding_size]
         x = torch.cat(gather, 1) # [batch_size, n_view_in_ring, view_after_embedding_size]
