@@ -1,4 +1,5 @@
-import os
+import sys, os
+sys.path.insert(0, os.path.abspath('..'))
 import math
 import json
 import logging
@@ -6,7 +7,8 @@ import datetime
 import torch
 from utils.util import ensure_dir
 from utils.visualization import WriterTensorboardX
-
+#from .data_loader import ShrecDataloader
+from .data_loader import ArrayDataLoader
 
 class BaseTrainer:
     """
@@ -61,7 +63,13 @@ class BaseTrainer:
 
         if resume:
             self._resume_checkpoint(resume)
-    
+        '''
+        temp
+        '''
+        self.train_att_after = 1 #epoch
+        self.n_epoch_att = 10
+
+   
     def _prepare_device(self, n_gpu_use):
         """ 
         setup GPU device if available, move model into configured device
@@ -76,11 +84,6 @@ class BaseTrainer:
         device = torch.device('cuda:0' if n_gpu_use > 0 else 'cpu')
         list_ids = list(range(n_gpu_use))
         return device, list_ids
-
-    '''
-    temp
-    '''
-    train_att_after = 30 #epoch
 
     def save_log_to_log_dict(self, epoch, result):
         # save logged informations into log dict
@@ -131,6 +134,37 @@ class BaseTrainer:
             self._save_checkpoint(epoch, save_best=best)
         return True
 
+    def _prepare_data_for_att(self):
+        #get inference of all data
+        self.model.eval()
+        self.data_loader.shuffle = False
+        with torch.no_grad():
+            all_output = []
+            all_target = []
+            all_data = []
+            import ipdb; ipdb.set_trace()
+            for i, (data, target) in enumerate(self.data_loader):
+                data, target = data.to(self.device), target.to(self.device)
+                output = self.model(data)
+                output = output[1] # get rings result
+                all_output.append(output)
+                all_target.append(target)
+                all_data.append(data)
+            ipdb.set_trace() 
+            data = torch.cat(all_data,0)
+            target = torch.cat(all_target, 0)
+            target_unroll = target.repeat(output.shape[1],1).transpose(0,1).flatten() #copy label to n-ring 
+
+            output = torch.cat(all_output, 0)
+            output = output.reshape(output.shape[0]* output.shape[1], output.shape[2] )
+
+            pred = torch.argmax(output, dim=1)
+
+            x_new,y_new = data, pred==target_unroll
+            ipdb.set_trace()
+            dtl = ArrayDataLoader(x_new, y_new, 32, True, 0.0, 16)
+        self.data_loader.shuffle = True
+        return None
 
     def train(self):
         """
@@ -138,10 +172,13 @@ class BaseTrainer:
         """
         for epoch in range(self.start_epoch, self.epochs + 1):
             result = self._train_epoch(epoch) #train classification model logic
-            if epoch % (train_att_after-1) == train_att_after: 
+            if epoch % self.train_att_after == self.train_att_after-1: 
                 #prepare data to train attention model
-                # TO DO 
-                self._train_att_epoch(epoch)
+                # TO DO
+                train_att_data_loader = self._prepare_data_for_att()
+            
+                for epoch_att in range(0,self.n_epoch_att):
+                    self._train_att_epoch(epoch, train_att_data_loader)
 
             log = self.save_log_to_log_dict(epoch, result)
             self.print_logged_info(log)

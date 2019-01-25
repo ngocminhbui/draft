@@ -7,6 +7,16 @@ import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 
+class ArrayDataset(Dataset):
+    """Constructs a simple dataset from array, matrix"""
+    def __init__(self, x,y):
+        self.X = x
+        self.Y = y
+    def __len__(self):
+        return self.X.shape[0]
+    def __getitem__(self, idx):
+        return (self.X[idx], self.Y[idx])
+
 class ShrecMultiviewDataset(Dataset):
     """ShrecMultiviewDataset dataset."""
     ''' for sh '''
