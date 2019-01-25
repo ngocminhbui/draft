@@ -52,7 +52,6 @@ class AttentionModel(BaseModel):
         self.fc_concat = nn.Linear(self.n_view_in_ring * self.view_after_embedding_size, self.n_classes)
 
     def forward(self,x):
-        
         return self._forward_one_ring(x)
     
     def _forward_one_ring(self,x):

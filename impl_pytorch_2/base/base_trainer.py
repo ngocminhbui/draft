@@ -77,59 +77,88 @@ class BaseTrainer:
         list_ids = list(range(n_gpu_use))
         return device, list_ids
 
+    '''
+    temp
+    '''
+    train_att_after = 30 #epoch
+
+    def save_log_to_log_dict(self, epoch, result):
+        # save logged informations into log dict
+        log = {'epoch': epoch}
+        for key, value in result.items():
+            if key == 'metrics':
+                log.update({mtr.__name__ : value[i] for i, mtr in enumerate(self.metrics)})
+            elif key == 'val_metrics':
+                log.update({'val_' + mtr.__name__ : value[i] for i, mtr in enumerate(self.metrics)})
+            else:
+                log[key] = value
+        return log
+
+    def print_logged_info(self, log):
+        # print logged informations to the screen
+        if self.train_logger is not None:
+            self.train_logger.add_entry(log)
+            if self.verbosity >= 1:
+                for key, value in log.items():
+                    self.logger.info('    {:15s}: {}'.format(str(key), value))
+
+    def save_best_if_needed(self, epoch, log):
+        #evaluate model performance according to configured metric, save best checkpoint as model_best
+        best = False
+        if self.mnt_mode != 'off':
+            try:
+                # check whether model performance improved or not, according to specified metric(mnt_metric)
+                improved = (self.mnt_mode == 'min' and log[self.mnt_metric] < self.mnt_best) or \
+                            (self.mnt_mode == 'max' and log[self.mnt_metric] > self.mnt_best)
+            except KeyError:
+                self.logger.warning("Warning: Metric '{}' is not found. Model performance monitoring is disabled.".format(self.mnt_metric))
+                self.mnt_mode = 'off'
+                improved = False
+                self.not_improved_count = 0
+
+            if improved:
+                self.mnt_best = log[self.mnt_metric]
+                self.not_improved_count = 0
+                best = True
+            else:
+                self.not_improved_count += 1
+
+            if self.not_improved_count > self.early_stop:
+                self.logger.info("Validation performance didn\'t improve for {} epochs. Training stops.".format(self.early_stop))
+                return False 
+
+        if epoch % self.save_period == 0:
+            self._save_checkpoint(epoch, save_best=best)
+        return True
+
+
     def train(self):
         """
         Full training logic
         """
         for epoch in range(self.start_epoch, self.epochs + 1):
-            result = self._train_epoch(epoch)
-            
-            # save logged informations into log dict
-            log = {'epoch': epoch}
-            for key, value in result.items():
-                if key == 'metrics':
-                    log.update({mtr.__name__ : value[i] for i, mtr in enumerate(self.metrics)})
-                elif key == 'val_metrics':
-                    log.update({'val_' + mtr.__name__ : value[i] for i, mtr in enumerate(self.metrics)})
-                else:
-                    log[key] = value
+            result = self._train_epoch(epoch) #train classification model logic
+            if epoch % (train_att_after-1) == train_att_after: 
+                #prepare data to train attention model
+                # TO DO 
+                self._train_att_epoch(epoch)
 
-            # print logged informations to the screen
-            if self.train_logger is not None:
-                self.train_logger.add_entry(log)
-                if self.verbosity >= 1:
-                    for key, value in log.items():
-                        self.logger.info('    {:15s}: {}'.format(str(key), value))
+            log = self.save_log_to_log_dict(epoch, result)
+            self.print_logged_info(log)
+            cont = self.save_best_if_needed(epoch,log) #save &continue or not?
+            if not cont:
+                break
 
-            # evaluate model performance according to configured metric, save best checkpoint as model_best
-            best = False
-            if self.mnt_mode != 'off':
-                try:
-                    # check whether model performance improved or not, according to specified metric(mnt_metric)
-                    improved = (self.mnt_mode == 'min' and log[self.mnt_metric] < self.mnt_best) or \
-                               (self.mnt_mode == 'max' and log[self.mnt_metric] > self.mnt_best)
-                except KeyError:
-                    self.logger.warning("Warning: Metric '{}' is not found. Model performance monitoring is disabled.".format(self.mnt_metric))
-                    self.mnt_mode = 'off'
-                    improved = False
-                    not_improved_count = 0
+    def _train_att_epoch(self,epoch, **kwargs):
+        """
+        Training attention model logic for an epoch
 
-                if improved:
-                    self.mnt_best = log[self.mnt_metric]
-                    not_improved_count = 0
-                    best = True
-                else:
-                    not_improved_count += 1
+        :param epoch: Current epoch number
+        """
+        raise NotImplementedError
 
-                if not_improved_count > self.early_stop:
-                    self.logger.info("Validation performance didn\'t improve for {} epochs. Training stops.".format(self.early_stop))
-                    break
-
-            if epoch % self.save_period == 0:
-                self._save_checkpoint(epoch, save_best=best)
-            
-
-    def _train_epoch(self, epoch):
+       
+    def _train_epoch(self, epoch, **kwargs):
         """
         Training logic for an epoch
 

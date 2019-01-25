@@ -1,6 +1,6 @@
 {
     "name": "shrec_baseline_model",
-    "n_gpu": 1,
+    "n_gpu": 2,
     "arch": {
         "type": "ShrecBaseline",
         "args": {
@@ -54,13 +54,13 @@
     },
     "trainer": {
         "epochs": 4000,
-        "save_dir": "saved/",
+        "save_dir": "saved/sh17/",
         "save_period": 1,
         "verbosity": 2,
         
         "monitor": "max metric_accuracy",
         "early_stop": 2000,
         "tensorboardX": true,
-        "log_dir": "saved/runs"
+        "log_dir": "saved/sh17/"
     }
 }

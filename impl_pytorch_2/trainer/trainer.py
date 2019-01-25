@@ -35,7 +35,66 @@ class Trainer(BaseTrainer):
                 self.writer.add_scalar(f'{metric.__name__}', acc_metrics[i])
         return acc_metrics
 
-    def _train_epoch(self, epoch):
+    def _train_att_epoch(self, epoch, **kwargs):
+        """
+        Training logic for an epoch
+
+        :param epoch: Current training epoch.
+        :return: A log that contains all information you want to save.
+
+        Note:
+            If you have additional information to record, for example:
+                > additional_log = {"x": x, "y": y}
+            merge it with log before return. i.e.
+                > log = {**log, **additional_log}
+                > return log
+
+            The metrics in log must have the key 'metrics'.
+        """
+        return
+        self.model.train()
+    
+        total_loss = 0
+        total_metrics = np.zeros(len(self.metrics))
+        for batch_idx, (data, target) in enumerate(self.data_loader):
+            data, target = data.to(self.device), target.to(self.device)
+
+            self.optimizer.zero_grad()
+            output = self.model(data)
+            loss = self.loss(output, target)
+            loss.backward()
+            self.optimizer.step()
+
+            self.writer.set_step((epoch - 1) * len(self.data_loader) + batch_idx)
+            self.writer.add_scalar('loss', loss.item())
+
+            total_loss += loss.item()
+            total_metrics += self._eval_metrics(output, target)
+
+            if self.verbosity >= 2 and batch_idx % self.log_step == 0:
+                self.logger.info('Train Epoch: {} [{}/{} ({:.0f}%)] Loss: {:.6f}'.format(
+                    epoch,
+                    batch_idx * self.data_loader.batch_size,
+                    self.data_loader.n_samples,
+                    100.0 * batch_idx / len(self.data_loader),
+                    loss.item()))
+                #self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+
+        log = {
+            'loss': total_loss / len(self.data_loader),
+            'metrics': (total_metrics / len(self.data_loader)).tolist()
+        }
+
+        if self.do_validation:
+            val_log = self._valid_epoch(epoch)
+            log = {**log, **val_log}
+
+        if self.lr_scheduler is not None and self.do_validation:
+            self.lr_scheduler.step(val_log['val_loss'])
+
+        return log
+
+    def _train_epoch(self, epoch, **kwargs):
         """
         Training logic for an epoch
 
