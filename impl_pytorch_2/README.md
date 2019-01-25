@@ -1,0 +1,1 @@
+utils/shrec17_data_utils/convert_ring_data_to_sample_data.ipynb: convert from per rings to per samples & merge train & validation dataset

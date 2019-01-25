@@ -1,0 +1,68 @@
+{
+    "name": "shrec_baseline_model",
+    "n_gpu": 1,
+    
+    "arch": {
+        "type": "ShrecBaseline",
+        "args": {
+            "num_classes":20,
+            "view_embedding_size":2048,
+            "view_after_embedding_size":128
+        }
+    },
+    "use_test_set_as_validation": true,
+    "data_loader": {
+        "type": "ShrecDataloader",
+        "args":{
+            "data_dir": "/home/bnminh/data/shrec17/resnet50",
+            "batch_size": 128,
+            "shuffle": true,
+            "validation_split": 0,
+            "num_workers": 16
+        }
+    },
+    "data_loader_test": {
+        "type": "ShrecDataloader",
+        "args":{
+            "data_dir": "/home/bnminh/data/shrec17/resnet50",
+            "batch_size": -1,
+            "shuffle": false,
+            "validation_split": 0,
+            "training": false,
+            "num_workers": 16
+        }
+    },
+    "optimizer": {
+        "type": "Adam",
+        "args":{
+            "lr": 0.0001,
+            "weight_decay": 0.000,
+            "amsgrad":true 
+        }
+    },
+    "loss": "cross_entropy_loss_multi",
+    "metrics": [
+        "metric_accuracy", "metric_accuracy_top_k"
+    ],
+    "lr_scheduler": {
+        "type": null,
+        "args": {
+            "mode": "min",
+            "factor": 0.1,
+            "patience": 300,
+            "verbose": true
+        }
+    },
+    "trainer": {
+        "epochs": 4000,
+        "save_dir": "saved/",
+        "save_period": 1,
+        "verbosity": 2,
+        
+        "monitor": "max metric_accuracy",
+        "early_stop": 2000,
+        
+        "tensorboardX": true,
+        "log_dir": "saved/runs"
+    }
+}
