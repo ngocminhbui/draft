@@ -1,7 +1,6 @@
 {
     "name": "shrec_baseline_model",
     "n_gpu": 1,
-    
     "arch": {
         "type": "ShrecBaseline",
         "args": {
@@ -61,7 +60,6 @@
         
         "monitor": "max metric_accuracy",
         "early_stop": 2000,
-        
         "tensorboardX": true,
         "log_dir": "saved/runs"
     }

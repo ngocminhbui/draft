@@ -18,4 +18,4 @@ def cross_entropy_loss_multi(output, target):
     for i in range(x.shape[0]):
         sum_loss_from_rings += cross_entropy_loss(x[i], target)
     #ipdb.set_trace()
-    return 0*cross_entropy_loss(x_voted,target) + sum_loss_from_rings
+    return cross_entropy_loss(x_voted,target) + sum_loss_from_rings
