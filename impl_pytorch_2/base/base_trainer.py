@@ -1,5 +1,3 @@
-import sys, os
-sys.path.insert(0, os.path.abspath('..'))
 import math
 import json
 import logging
@@ -7,8 +5,7 @@ import datetime
 import torch
 from utils.util import ensure_dir
 from utils.visualization import WriterTensorboardX
-#from .data_loader import ShrecDataloader
-from .data_loader import ArrayDataLoader
+import os
 
 class BaseTrainer:
     """
@@ -172,14 +169,6 @@ class BaseTrainer:
         """
         for epoch in range(self.start_epoch, self.epochs + 1):
             result = self._train_epoch(epoch) #train classification model logic
-            if epoch % self.train_att_after == self.train_att_after-1: 
-                #prepare data to train attention model
-                # TO DO
-                train_att_data_loader = self._prepare_data_for_att()
-            
-                for epoch_att in range(0,self.n_epoch_att):
-                    self._train_att_epoch(epoch, train_att_data_loader)
-
             log = self.save_log_to_log_dict(epoch, result)
             self.print_logged_info(log)
             cont = self.save_best_if_needed(epoch,log) #save &continue or not?
